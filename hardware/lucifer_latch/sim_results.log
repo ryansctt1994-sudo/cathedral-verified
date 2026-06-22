@@ -1,0 +1,22 @@
+VCD info: dumpfile lucifer_latch.vcd opened for output.
+[T1] Reset / ARMED
+  PASS: latch & veto deasserted on reset
+[T2] Sub-threshold threat (190) does not trigger
+  PASS: threat=190 stays armed
+[T3] trigger_in -> countdown -> fire at timing floor
+  PASS: latch fired after trigger pulse
+       fired ~68001 cycles after arming (expected ~68000)
+  PASS: ng floor ~= 68000 cycles (680us)
+[T4] Irreversibility under continued software activity
+  PASS: ys TRIGGERED with all inputs low
+  PASS: GGERED under max threat toggling
+[T5] Physical reset clears the latch
+  PASS: rst_n clears latch & veto
+[T6] threat_level>=191 path arms countdown
+  PASS: threat=191 path triggers latch
+
+================ RESULT ================
+  PASSED: 8   FAILED: 0
+=======================================
+  VERDICT: SAFETY-CRITICAL BEHAVIOR VERIFIED
+tb_lucifer_latch.v:89: $finish called at 1366625000 (1ps)
