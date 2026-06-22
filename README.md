@@ -25,7 +25,8 @@ make test          # runs both suites
 make test-chronicle
 make test-hw        # requires: iverilog
 ```
-CI runs the same `make test` on every push (`.github/workflows/ci.yml`).
+The GitHub Actions workflow currently runs the Chronicle verification suite on every push.
+Run `make test` locally for the full Chronicle + Lucifer Latch check until hardware-simulation CI is expanded.
 
 ## What is NOT claimed (read this)
 Honesty is the point of this repo, so the limits are stated up front:
