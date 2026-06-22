@@ -1,0 +1,32 @@
+[T1] Honest chain verifies
+  PASS: clean 5-entry chain valid (chain valid: 5 entries, head=f2b757ab8e2048fc...)
+[T2] Tamper a payload field -> detected
+  PASS: middle-entry edit caught (content tampered at index 2: hash != recomputed hash)
+[T3] Tamper + recompute that ONE entry's hash -> still detected (chain break)
+  PASS: local re-hash still breaks downstream link (broken link at index 3: prev_hash does not match prior hash)
+[T4] Reorder two entries -> detected
+  PASS: reordering caught (index mismatch at position 1: stored index=3)
+[T5] Delete an entry -> detected
+  PASS: deletion caught (index mismatch at position 2: stored index=3)
+[T6] Truncate the tail -> chain still self-consistent (expected) but head changes
+  PASS: truncated chain is internally valid (why external anchoring is needed)
+  PASS: truncation changes head hash (detectable IF head is anchored)
+[T7] Insert a forged entry in the middle -> detected
+  PASS: inserted forged entry caught (content tampered at index 2: hash != recomputed hash)
+[T8] Persistence round-trip: write to disk, reload, verify
+  PASS: reloaded chain verifies & head matches (chain valid: 10 entries, head=1151cf67bdd77912...)
+[T9] On-disk tamper: edit the JSONL file, reload -> detected
+  PASS: file-level tamper caught on reload (content tampered at index 2: hash != recomputed hash)
+[T10] Merkle root is deterministic and content-sensitive
+  PASS: identical content -> identical merkle root (deterministic)
+  PASS: any change -> different merkle root
+[T11] Head-anchoring closes the truncation gap (T6)
+  PASS: untouched chain matches anchor (verified against anchor: 7 entries, head matches)
+  PASS: truncation now DETECTED via anchor (entry count 4 != anchored 7 (truncation/insertion detected))
+[T12] Full forward-recompute rewrite is caught by anchor
+  PASS: rewritten chain verifies internally but fails anchor (head hash != anchored head (rewrite detected))
+
+================ RESULT ================
+  PASSED: 15   FAILED: 0
+=======================================
+  VERDICT: TAMPER-EVIDENCE VERIFIED
