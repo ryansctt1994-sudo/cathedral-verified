@@ -14,10 +14,12 @@ jobs:
           python-version: "3.12"
       - name: Run Layer 0 source-policy checks
         run: PYTHONPATH=src:. python3 -m unittest tests.test_bootstrap -v
+      - name: Run Weaver Recognition Kernel checks
+        run: PYTHONPATH=src:. python3 -m unittest tests.test_recognition_kernel -v
       - name: Run Chronicle verification suite
         run: cd chronicle && python3 test_chronicle.py
       - name: Run Cathedral Forge P0 regression suite
-        run: PYTHONPATH=src:. python3 -m unittest discover -s tests -v
+        run: PYTHONPATH=src:. python3 -m unittest discover -s tests -p 'test_p0_regressions.py' -v
 
   rtl-simulation:
     runs-on: ubuntu-latest
