@@ -1,7 +1,10 @@
-.PHONY: test test-hw test-chronicle test-integration
+.PHONY: test test-bootstrap test-hw test-chronicle test-integration
 
-test: test-chronicle test-integration test-hw
+test: test-bootstrap test-chronicle test-integration test-hw
 	@echo "ALL DISCLOSED CHECKS PASSED."
+
+test-bootstrap:
+	@PYTHONPATH=src:. python3 -m unittest tests.test_bootstrap -v
 
 test-chronicle:
 	@cd chronicle && python3 test_chronicle.py
