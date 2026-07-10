@@ -53,8 +53,8 @@ Those remain separate promotion gates requiring dedicated source bootstrap scrip
 ## Current receipt
 
 ```text
-Validated implementation head: 40449d33e45dfc1c60b82e08d511738a81eacb32
-GitHub Actions run: #19
+Head: a6347bd11b91b1de207ffeeb8dc2535b231beefe
+GitHub Actions run: #21
 Layer 0 source-policy checks: PASS
 Chronicle verification: PASS
 P0 regression suite: PASS
