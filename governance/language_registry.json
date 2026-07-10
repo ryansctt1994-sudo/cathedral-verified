@@ -1,0 +1,31 @@
+{
+  "registry_version": "weaver-language-registry/v1",
+  "governing_law": "No recognition, no interpretation. No canonical interpretation, no authority. No bounded authority, no execution.",
+  "languages": [
+    {
+      "language_id": "CATHEDRAL-GOVERNANCE-REQUEST-v1",
+      "authority_class": "governance_command",
+      "grammar_class": "fixed_json_schema",
+      "canonical_parser": "recognition_kernel.parse_governance_request",
+      "canonical_serializer": "recognition_kernel.canonical_serialize",
+      "max_input_bytes": 32768,
+      "max_field_lengths": {
+        "prompt": 8192,
+        "conversation_context": 16384
+      },
+      "max_depth": 4,
+      "max_object_count": 32,
+      "max_rounds": 8,
+      "ambiguity_policy": "reject",
+      "unicode_normalization": "NFC_required_before_acceptance",
+      "unknown_field_policy": "reject",
+      "duplicate_field_policy": "reject",
+      "trailing_data_policy": "reject",
+      "side_effects_during_parse": false,
+      "raw_input_retains_authority": false,
+      "canonical_serialization": "UTF-8 JSON, sorted keys, compact separators, finite values only",
+      "parser_evidence_level": "P3",
+      "evidence_note": "Canonical parser, bounds, canonical round-trip, negative malformed-input tests, and CI integration implemented. Differential, fuzz, resource timing, endpoint-equivalence, and independent reproduction remain open."
+    }
+  ]
+}
