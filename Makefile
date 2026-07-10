@@ -1,10 +1,13 @@
-.PHONY: test test-hw test-chronicle
+.PHONY: test test-hw test-chronicle test-integration
 
-test: test-chronicle test-hw
-	@echo "ALL VERIFIED."
+test: test-chronicle test-integration test-hw
+	@echo "ALL DISCLOSED CHECKS PASSED."
 
 test-chronicle:
 	@cd chronicle && python3 test_chronicle.py
+
+test-integration:
+	@PYTHONPATH=src:. python3 -m unittest discover -s tests -v
 
 test-hw:
 	@cd hardware/lucifer_latch && iverilog -g2012 -o sim_latch lucifer_latch.v tb_lucifer_latch.v && vvp sim_latch
