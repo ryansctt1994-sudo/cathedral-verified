@@ -16,6 +16,8 @@ jobs:
         run: PYTHONPATH=src:. python3 -m unittest tests.test_bootstrap -v
       - name: Run Weaver Recognition Kernel checks
         run: PYTHONPATH=src:. python3 -m unittest tests.test_recognition_kernel -v
+      - name: Run classifier assurance checks
+        run: PYTHONPATH=src:. python3 -m unittest tests.test_classifier_assurance -v
       - name: Run Chronicle verification suite
         run: cd chronicle && python3 test_chronicle.py
       - name: Run Cathedral Forge P0 regression suite
