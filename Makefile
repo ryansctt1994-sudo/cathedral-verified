@@ -1,6 +1,6 @@
-.PHONY: test test-bootstrap test-langsec test-hw test-chronicle test-integration
+.PHONY: test test-bootstrap test-langsec test-classifier-assurance test-hw test-chronicle test-integration
 
-test: test-bootstrap test-langsec test-chronicle test-integration test-hw
+test: test-bootstrap test-langsec test-classifier-assurance test-chronicle test-integration test-hw
 	@echo "ALL DISCLOSED CHECKS PASSED."
 
 test-bootstrap:
@@ -8,6 +8,9 @@ test-bootstrap:
 
 test-langsec:
 	@PYTHONPATH=src:. python3 -m unittest tests.test_recognition_kernel -v
+
+test-classifier-assurance:
+	@PYTHONPATH=src:. python3 -m unittest tests.test_classifier_assurance -v
 
 test-chronicle:
 	@cd chronicle && python3 test_chronicle.py
