@@ -12,6 +12,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Run Layer 0 source-policy checks
+        run: PYTHONPATH=src:. python3 -m unittest tests.test_bootstrap -v
       - name: Run Chronicle verification suite
         run: cd chronicle && python3 test_chronicle.py
       - name: Run Cathedral Forge P0 regression suite
