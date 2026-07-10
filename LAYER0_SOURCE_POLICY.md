@@ -49,3 +49,14 @@ It does **not** establish:
 - source-to-silicon physical verification
 
 Those remain separate promotion gates requiring dedicated source bootstrap scripts, pinned toolchain sources, build receipts, binary comparisons, and external reproduction.
+
+## Current receipt
+
+```text
+Validated implementation head: 40449d33e45dfc1c60b82e08d511738a81eacb32
+GitHub Actions run: #19
+Layer 0 source-policy checks: PASS
+Chronicle verification: PASS
+P0 regression suite: PASS
+Lucifer Latch RTL simulation: PASS
+```
