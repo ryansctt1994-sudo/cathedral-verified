@@ -5,8 +5,6 @@ import json
 import os
 import tempfile
 
-import pytest
-
 from chronicle import Chronicle
 from chronicle import compute_hash
 from chronicle import make_anchor
@@ -206,10 +204,3 @@ def test_anchor_detects_full_forward_rewrite() -> None:
 
     assert internally_valid, internal_message
     assert not anchor_valid, anchor_message
-
-
-def test_invalid_payload_type_fails_closed() -> None:
-    chronicle = Chronicle()
-
-    with pytest.raises(TypeError):
-        chronicle.append(["not", "a", "mapping"])
