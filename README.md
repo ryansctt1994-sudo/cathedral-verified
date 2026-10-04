@@ -1,16 +1,15 @@
 # cathedral-verified
 
-Two safety primitives with **passing, reproducible test suites**. Nothing here is
-asserted on trust — clone it and run `make test`. If a claim isn't backed by a test
-in this repo, it isn't claimed here.
+Two bounded safety primitives with repository-local tests. The repository is designed for reproducibility, but a green local or GitHub CI run is **not** the same as independent reproduction or production certification.
+
+Nothing broader than the exercised test scope is claimed here.
 
 ## What's verified
 
 ### 1. Lucifer Latch — hardware safety veto (`hardware/lucifer_latch/`)
 An irreversible FPGA kill switch (Verilog, Artix-7 / Arty A7-35T target). Simulated
 with Icarus Verilog; **8/8 checks pass.** The property that matters — once tripped,
-**no software input clears it; only physical reset does** — is proven by hammering it
-with max threat + trigger toggling and confirming it stays latched. Timing floor
+**no software input clears it; only physical reset does** — is tested in RTL simulation by exercising max-threat and trigger toggling and confirming the simulated latch remains set. Timing floor
 measured at 68001 cycles ≈ 680 µs @100 MHz, on spec.
 
 ### 2. Chronicle — tamper-evident ledger (`chronicle/`)
@@ -39,6 +38,10 @@ Honesty is the point of this repo, so the limits are stated up front:
   attacker can't also rewrite — an external append-only store or a quorum of witnesses.
   The repo implements the detection primitive and the anchor mechanism; it does not
   implement the external store. That's the next real step, not a solved one.
+
+## Independence boundary
+
+GitHub Actions success demonstrates that the configured workflow passed in GitHub's environment for that commit. It does not establish clean-room independent reproduction, silicon behavior, external witness anchoring, or production safety.
 
 ## Status
 | Artifact | Checks | Verified scope | Still needed |
