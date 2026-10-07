@@ -1,0 +1,11 @@
+# Gate Zero ownership scaffold
+# Metadata only: enforcement requires repository branch/ruleset settings.
+* @ryansctt1994-sudo
+
+# Evidence and execution-sensitive paths
+/.github/ @ryansctt1994-sudo
+/chronicle/ @ryansctt1994-sudo
+/hardware/ @ryansctt1994-sudo
+/Makefile @ryansctt1994-sudo
+/requirements-dev.txt @ryansctt1994-sudo
+/CATHEDRAL_OS_ARCHITECTURE.md @ryansctt1994-sudo
