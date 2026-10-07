@@ -1,22 +1,32 @@
 # cathedral-verified
 
-Two safety primitives with **passing, reproducible test suites**. Nothing here is
-asserted on trust — clone it and run `make test`. If a claim isn't backed by a test
-in this repo, it isn't claimed here.
+Two bounded safety primitives with repository-local tests. A passing local or GitHub
+Actions run is evidence about the exercised revision and command; it is **not**
+independent reproduction, production certification, or deployment authority.
+
+Nothing broader than the explicitly exercised test scope is claimed here.
 
 ## What's verified
 
 ### 1. Lucifer Latch — hardware safety veto (`hardware/lucifer_latch/`)
-An irreversible FPGA kill switch (Verilog, Artix-7 / Arty A7-35T target). Simulated
-with Icarus Verilog; **8/8 checks pass.** The property that matters — once tripped,
-**no software input clears it; only physical reset does** — is proven by hammering it
-with max threat + trigger toggling and confirming it stays latched. Timing floor
-measured at 68001 cycles ≈ 680 µs @100 MHz, on spec.
+An irreversible FPGA kill switch (Verilog, Artix-7 / Arty A7-35T target). The
+repository's historical RTL simulation suite reports **8/8 checks pass**. The tested
+property is that once tripped, software inputs do not clear the simulated latch;
+physical reset is required. This is simulation evidence only — not silicon validation,
+synthesis timing closure, or board-measured behavior. The PR #4 hosted run discussed
+below does not rerun this hardware suite.
 
 ### 2. Chronicle — tamper-evident ledger (`chronicle/`)
-A SHA-256 hash-chained append-only log (Python stdlib only). **15/15 adversarial checks
-pass.** Field edits, re-hashing, reordering, deletion, forged inserts, and on-disk
-tampering are all detected. Head-anchoring closes the truncation/rewrite gap.
+A SHA-256 hash-chained tamper-evident log (Python stdlib only). On PR #4 at
+`6f6e6b78a2d6439d719fa406612387808db4899b`, the repaired command executed
+**12 pytest tests and passed** in GitHub Actions run
+[37652321891](https://github.com/ryansctt1994-sudo/cathedral-verified/actions/runs/37652321891).
+The repair also demonstrated that the former workflow command could exit successfully
+without executing the pytest test functions; the corrected target fails closed on a
+deliberately failing test.
+
+Older 15/15 Chronicle counts are retained only as historical reports. The current
+bounded claim is the repaired 12-test execution at the exact PR revision above.
 
 ## Reproduce
 ```bash
@@ -25,8 +35,12 @@ make test          # runs both suites
 make test-chronicle
 make test-hw        # requires: iverilog
 ```
-The GitHub Actions workflow currently runs the Chronicle verification suite on every push.
-Run `make test` locally for the full Chronicle + Lucifer Latch check until hardware-simulation CI is expanded.
+The PR #4 workflow runs the Chronicle pytest suite on GitHub Actions with read-only
+repository permissions and a bounded timeout. Run `make test` locally for the
+combined Chronicle + Lucifer Latch suite until hardware-simulation CI is expanded.
+
+A green hosted run remains same-project CI. It does not establish a qualifying
+independent witness.
 
 ## What is NOT claimed (read this)
 Honesty is the point of this repo, so the limits are stated up front:
@@ -43,8 +57,16 @@ Honesty is the point of this repo, so the limits are stated up front:
 ## Status
 | Artifact | Checks | Verified scope | Still needed |
 |----------|:------:|----------------|--------------|
-| Lucifer Latch | 8/8 | RTL behavior in sim | silicon: synth, debounce, metastability, UART TX |
-| Chronicle | 15/15 | tamper-evidence + anchoring logic | external anchor store / witness quorum |
+| Lucifer Latch | historical 8/8 report | RTL behavior in simulation | fresh hosted rerun; synthesis; silicon; debounce; metastability; UART TX |
+| Chronicle | 12 pytest tests on PR #4 | bounded tamper-detection behavior exercised by the repaired command | merge/review decision; external anchor store / witness quorum; independent reproduction |
+
+## Evidence boundary
+
+- **Hosted PR evidence:** PASS for the exact PR #4 revision named above.
+- **Independent reproduction:** not established.
+- **Witness:** W0 at portfolio level.
+- **Operational authority:** O0 — withheld.
+- **Production:** prohibited by the portfolio governance posture.
 
 ## License
 MIT.
