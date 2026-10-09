@@ -69,7 +69,9 @@ module tb_lucifer_latch;
 
         // ---- T5: only physical reset clears ----
         $display("[T5] Physical reset clears the latch");
-        rst_n=0; repeat(4) @(posedge clk);
+        // Clear previous test's maximum-threat stimulus before releasing reset:
+        // otherwise T6 may pass due to an unintended pre-trigger.
+        rst_n=0; trigger_in=0; threat_level=0; repeat(4) @(posedge clk);
         check(latch_state===0 && veto_signal===0, "rst_n clears latch & veto");
         rst_n=1; @(posedge clk);
 
@@ -84,11 +86,15 @@ module tb_lucifer_latch;
         $display("\n================ RESULT ================");
         $display("  PASSED: %0d   FAILED: %0d", pass, fail);
         $display("=======================================");
-        if (fail==0) $display("  VERDICT: SAFETY-CRITICAL BEHAVIOR VERIFIED");
-        else         $display("  VERDICT: DESIGN HAS FAILURES — SEE ABOVE");
-        $finish;
+        if (fail==0) begin
+            $display("  VERDICT: RTL SIMULATION CHECKS PASSED");
+            $finish;
+        end else begin
+            $display("  VERDICT: DESIGN HAS FAILURES — SEE ABOVE");
+            $fatal(1, "RTL_TESTBENCH_ASSERTION_FAILURE");
+        end
     end
 
     // global watchdog
-    initial begin #2000000; $display("WATCHDOG TIMEOUT"); $finish; end
+    initial begin #2000000; $fatal(1, "RTL_TESTBENCH_WATCHDOG_TIMEOUT"); end
 endmodule
