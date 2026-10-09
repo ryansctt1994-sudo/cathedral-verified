@@ -16,7 +16,7 @@ append-only/WORM storage, signatures) are noted in the report — this module
 gives you the detection primitive they all build on.
 """
 from __future__ import annotations
-import hashlib, json, os, time
+import hashlib, json, math, os, re, threading, time
 from dataclasses import dataclass, asdict
 from typing import Any
 
@@ -24,7 +24,7 @@ GENESIS_PREV = "0" * 64  # prev_hash of the first block
 
 def _canonical(obj: Any) -> bytes:
     # Deterministic serialization: sorted keys, no whitespace ambiguity.
-    return json.dumps(obj, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return json.dumps(obj, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
 
 def compute_hash(index: int, timestamp: float, payload: dict, prev_hash: str) -> str:
     h = hashlib.sha256()
@@ -45,28 +45,86 @@ class Chronicle:
     def __init__(self, path: str | None = None):
         self.path = path
         self.entries: list[Entry] = []
+        self._append_lock = threading.RLock()  # same-object threads only, not cross-process
+        self._uncertain_persist = False
         if path and os.path.exists(path):
             self._load()
 
     def append(self, payload: dict, timestamp: float | None = None) -> Entry:
-        ts = time.time() if timestamp is None else timestamp
-        idx = len(self.entries)
-        prev = self.entries[-1].hash if self.entries else GENESIS_PREV
-        h = compute_hash(idx, ts, payload, prev)
-        e = Entry(idx, ts, payload, prev, h)
-        self.entries.append(e)
-        if self.path:
-            with open(self.path, "a") as f:
-                f.write(json.dumps(e.to_dict()) + "\n")
-                f.flush(); os.fsync(f.fileno())   # durability: survive crash
-        return e
+        """Append only on a locally verified chain and unchanged disk snapshot.
+
+        This is not cross-process locking or crash-atomic storage. An ambiguous
+        write permanently poisons this instance; reopen and verify the ledger
+        before further work. External authenticated anchoring is still absent.
+        """
+        with self._append_lock:
+            if self._uncertain_persist:
+                raise RuntimeError("previous persistence outcome unknown; reopen and verify")
+            valid, detail = self.verify()
+            if not valid:
+                raise ValueError(f"existing ledger invalid; append refused: {detail}")
+            if self.path:
+                self._assert_disk_unchanged()
+
+            ts = time.time() if timestamp is None else timestamp
+            if type(ts) not in (int, float) or not math.isfinite(ts):
+                raise ValueError("timestamp must be a finite number")
+            if not isinstance(payload, dict):
+                raise TypeError("payload must be a JSON object")
+            # Immutable value snapshot: do not retain caller-owned nested objects.
+            # Strict canonicalization rejects nonfinite JSON values.
+            frozen_payload = json.loads(_canonical(payload))
+            idx = len(self.entries)
+            prev = self.entries[-1].hash if self.entries else GENESIS_PREV
+            e = Entry(idx, ts, frozen_payload,
+                      prev, compute_hash(idx, ts, frozen_payload, prev))
+            if self.path:
+                try:
+                    with open(self.path, "a", encoding="utf-8") as f:
+                        f.write(json.dumps(e.to_dict(), allow_nan=False) + "\n")
+                        f.flush()
+                        os.fsync(f.fileno())
+                except OSError:
+                    # The disk may contain part/all of the entry even if the
+                    # caller saw an exception. Never retry on this instance.
+                    self._uncertain_persist = True
+                    raise
+            self.entries.append(e)
+            return e
+
+    def _assert_disk_unchanged(self) -> None:
+        if not os.path.exists(self.path):
+            if self.entries:
+                raise ValueError("ledger file disappeared since last read")
+            return
+        disk = Chronicle(self.path)
+        valid, reason = disk.verify()
+        if not valid:
+            raise ValueError(f"on-disk chain invalid: {reason}")
+        if len(disk.entries) != len(self.entries) or disk.head() != self.head():
+            raise ValueError("on-disk head changed since last read")
 
     def _load(self):
-        with open(self.path) as f:
+        def unique_keys(pairs):
+            result = {}
+            for key, value in pairs:
+                if key in result:
+                    raise ValueError(f"duplicate Chronicle JSON key: {key}")
+                result[key] = value
+            return result
+
+        def nonfinite(value):
+            raise ValueError(f"nonfinite Chronicle JSON value: {value}")
+
+        fields = {"index", "timestamp", "payload", "prev_hash", "hash"}
+        with open(self.path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line:
-                    d = json.loads(line)
+                    d = json.loads(line, object_pairs_hook=unique_keys,
+                                   parse_constant=nonfinite)
+                    if not isinstance(d, dict) or set(d) != fields:
+                        raise ValueError("invalid Chronicle entry schema")
                     self.entries.append(Entry(**d))
 
     def verify(self) -> tuple[bool, str]:
@@ -77,7 +135,10 @@ class Chronicle:
                 return False, f"index mismatch at position {i}: stored index={e.index}"
             if e.prev_hash != prev:
                 return False, f"broken link at index {i}: prev_hash does not match prior hash"
-            recomputed = compute_hash(e.index, e.timestamp, e.payload, e.prev_hash)
+            try:
+                recomputed = compute_hash(e.index, e.timestamp, e.payload, e.prev_hash)
+            except (ValueError, TypeError, OverflowError) as exc:
+                return False, f"invalid entry at index {i}: {exc}"
             if recomputed != e.hash:
                 return False, f"content tampered at index {i}: hash != recomputed hash"
             prev = e.hash
@@ -106,6 +167,14 @@ def make_anchor(chron: "Chronicle") -> dict:
             "merkle_root": chron.merkle_root()}
 
 def verify_against_anchor(chron: "Chronicle", anchor: dict) -> tuple[bool, str]:
+    if not isinstance(anchor, dict) or set(anchor) != {"count", "head", "merkle_root"}:
+        return False, "malformed anchor schema"
+    if type(anchor["count"]) is not int or anchor["count"] < 0:
+        return False, "malformed anchor count"
+    if any(not isinstance(anchor[k], str) or
+           re.fullmatch(r"[0-9a-f]{64}", anchor[k]) is None
+           for k in ("head", "merkle_root")):
+        return False, "malformed anchor digest"
     ok, msg = chron.verify()
     if not ok:
         return False, msg

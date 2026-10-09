@@ -11,3 +11,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run Chronicle verification suite
         run: cd chronicle && python3 test_chronicle.py
+      - name: Chronicle hardening negative controls
+        run: cd chronicle && python3 -m unittest -v test_chronicle_hardening
