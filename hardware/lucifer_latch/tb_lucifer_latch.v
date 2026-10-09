@@ -69,7 +69,9 @@ module tb_lucifer_latch;
 
         // ---- T5: only physical reset clears ----
         $display("[T5] Physical reset clears the latch");
-        rst_n=0; repeat(4) @(posedge clk);
+        // Clear previous test's maximum-threat stimulus before releasing reset:
+        // otherwise T6 may pass due to an unintended pre-trigger.
+        rst_n=0; trigger_in=0; threat_level=0; repeat(4) @(posedge clk);
         check(latch_state===0 && veto_signal===0, "rst_n clears latch & veto");
         rst_n=1; @(posedge clk);
 
