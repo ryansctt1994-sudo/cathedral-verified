@@ -11,3 +11,16 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run Chronicle verification suite
         run: cd chronicle && python3 test_chronicle.py
+
+  rtl-simulation:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Icarus Verilog
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+      - name: Run Lucifer Latch simulation assertions
+        run: make test-hw
+      - name: Prove simulator failure causes CI failure
+        run: python3 hardware/lucifer_latch/test_negative_control.py
