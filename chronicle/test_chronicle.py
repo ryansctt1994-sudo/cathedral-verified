@@ -107,3 +107,7 @@ print(f"\n================ RESULT ================")
 print(f"  PASSED: {P}   FAILED: {F}")
 print(f"=======================================")
 print("  VERDICT: TAMPER-EVIDENCE VERIFIED" if F == 0 else "  VERDICT: FAILURES — SEE ABOVE")
+
+# CI must never report success after a failed manual check.
+if F:
+    raise SystemExit(1)
