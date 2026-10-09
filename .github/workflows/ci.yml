@@ -9,5 +9,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Pin reconciled Chronicle and RTL CI surface
+        run: python3 -m unittest -v tests/test_ci_composition.py
       - name: Run Chronicle verification suite
         run: cd chronicle && python3 test_chronicle.py
+      - name: Chronicle hardening negative controls
+        run: cd chronicle && python3 -m unittest -v test_chronicle_hardening
+
+  rtl-simulation:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Icarus Verilog
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+      - name: Run Lucifer Latch simulation assertions
+        run: make test-hw
+      - name: Prove simulator failure causes CI failure
+        run: python3 hardware/lucifer_latch/test_negative_control.py
