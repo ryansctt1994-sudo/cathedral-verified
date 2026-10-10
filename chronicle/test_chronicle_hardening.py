@@ -97,6 +97,38 @@ class ChronicleHardeningTests(unittest.TestCase):
                 ok, _ = verify_against_anchor(c, invalid)
                 self.assertFalse(ok)
 
+    def test_recomputed_bool_sequence_must_be_refused(self):
+        from chronicle import compute_hash
+        c = Chronicle()
+        c.append({"v": 0}, timestamp=1)
+        item = c.append({"v": 1}, timestamp=2)
+        item.index = True   # True == 1 in Python: must NOT pass.
+        item.hash = compute_hash(item.index, item.timestamp, item.payload, item.prev_hash)
+        self.assertFalse(c.verify()[0])
+
+    def test_recomputed_float_sequence_must_be_refused(self):
+        from chronicle import compute_hash
+        c = Chronicle()
+        c.append({"v": 0}, timestamp=1)
+        item = c.append({"v": 1}, timestamp=2)
+        item.index = 1.0
+        item.hash = compute_hash(item.index, item.timestamp, item.payload, item.prev_hash)
+        self.assertFalse(c.verify()[0])
+
+    def test_recomputed_boolean_timestamp_must_be_refused(self):
+        from chronicle import compute_hash
+        c = Chronicle()
+        item = c.append({"v": 0}, timestamp=1)
+        item.timestamp = True
+        item.hash = compute_hash(item.index, item.timestamp, item.payload, item.prev_hash)
+        self.assertFalse(c.verify()[0])
+
+    def test_malformed_entry_must_fail_closed_without_exception(self):
+        c = Chronicle()
+        c.append({"v": 0}, timestamp=1)
+        c.entries.append(object())
+        self.assertFalse(c.verify()[0])
+
     def test_valid_anchor_still_works(self):
         c = Chronicle(); c.append({'v': 0}, timestamp=1)
         self.assertTrue(verify_against_anchor(c, make_anchor(c))[0])
