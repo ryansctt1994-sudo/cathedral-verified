@@ -49,6 +49,9 @@ class Chronicle:
         self._uncertain_persist = False
         if path and os.path.exists(path):
             self._load()
+            valid, reason = self.verify()
+            if not valid:
+                raise ValueError(f"invalid persisted Chronicle history: {reason}")
 
     def append(self, payload: dict, timestamp: float | None = None) -> Entry:
         """Append only on a locally verified chain and unchanged disk snapshot.
