@@ -97,6 +97,98 @@ class ChronicleHardeningTests(unittest.TestCase):
                 ok, _ = verify_against_anchor(c, invalid)
                 self.assertFalse(ok)
 
+    def test_recomputed_bool_sequence_must_be_refused(self):
+        from chronicle import compute_hash
+        c = Chronicle()
+        c.append({"v": 0}, timestamp=1)
+        item = c.append({"v": 1}, timestamp=2)
+        item.index = True   # True == 1 in Python: must NOT pass.
+        item.hash = compute_hash(item.index, item.timestamp, item.payload, item.prev_hash)
+        self.assertFalse(c.verify()[0])
+
+    def test_recomputed_float_sequence_must_be_refused(self):
+        from chronicle import compute_hash
+        c = Chronicle()
+        c.append({"v": 0}, timestamp=1)
+        item = c.append({"v": 1}, timestamp=2)
+        item.index = 1.0
+        item.hash = compute_hash(item.index, item.timestamp, item.payload, item.prev_hash)
+        self.assertFalse(c.verify()[0])
+
+    def test_recomputed_boolean_timestamp_must_be_refused(self):
+        from chronicle import compute_hash
+        c = Chronicle()
+        item = c.append({"v": 0}, timestamp=1)
+        item.timestamp = True
+        item.hash = compute_hash(item.index, item.timestamp, item.payload, item.prev_hash)
+        self.assertFalse(c.verify()[0])
+
+    def test_malformed_entry_must_fail_closed_without_exception(self):
+        c = Chronicle()
+        c.append({"v": 0}, timestamp=1)
+        c.entries.append(object())
+        self.assertFalse(c.verify()[0])
+
+    def test_corrupted_disk_history_must_refuse_construction(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "history.jsonl"
+            c = Chronicle(str(path))
+            c.append({"value": 1}, timestamp=1)
+            c.append({"value": 2}, timestamp=2)
+            lines = path.read_text(encoding="utf-8").splitlines()
+            first = json.loads(lines[0])
+            first["payload"]["value"] = 999
+            lines[0] = json.dumps(first)
+            path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                Chronicle(str(path))
+
+    def test_rehashed_broken_link_must_refuse_construction(self):
+        from chronicle import compute_hash
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "history.jsonl"
+            c = Chronicle(str(path))
+            c.append({"value": 1}, timestamp=1)
+            c.append({"value": 2}, timestamp=2)
+            lines = path.read_text(encoding="utf-8").splitlines()
+            second = json.loads(lines[1])
+            second["prev_hash"] = "f" * 64
+            second["hash"] = compute_hash(
+                second["index"], second["timestamp"],
+                second["payload"], second["prev_hash"])
+            lines[1] = json.dumps(second)
+            path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                Chronicle(str(path))
+
+    def test_rehashed_bool_index_on_disk_must_refuse_construction(self):
+        from chronicle import compute_hash
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "history.jsonl"
+            c = Chronicle(str(path))
+            c.append({"value": 1}, timestamp=1)
+            c.append({"value": 2}, timestamp=2)
+            lines = path.read_text(encoding="utf-8").splitlines()
+            second = json.loads(lines[1])
+            second["index"] = True
+            second["hash"] = compute_hash(
+                second["index"], second["timestamp"],
+                second["payload"], second["prev_hash"])
+            lines[1] = json.dumps(second)
+            path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                Chronicle(str(path))
+
+    def test_healthy_disk_history_still_resumes(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "history.jsonl"
+            c = Chronicle(str(path))
+            c.append({"value": 1}, timestamp=1)
+            c.append({"value": 2}, timestamp=2)
+            resumed = Chronicle(str(path))
+            self.assertEqual(resumed.head(), c.head())
+            self.assertTrue(resumed.verify()[0])
+
     def test_valid_anchor_still_works(self):
         c = Chronicle(); c.append({'v': 0}, timestamp=1)
         self.assertTrue(verify_against_anchor(c, make_anchor(c))[0])
