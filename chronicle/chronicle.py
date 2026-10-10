@@ -131,8 +131,25 @@ class Chronicle:
         """Walk the chain. Returns (ok, message). Detects ANY tampering."""
         prev = GENESIS_PREV
         for i, e in enumerate(self.entries):
-            if e.index != i:
-                return False, f"index mismatch at position {i}: stored index={e.index}"
+            if not isinstance(e, Entry):
+                return False, f"malformed entry at index {i}"
+            # bool is a Python int subclass; 1.0 == 1, too. Hash consistency
+            # cannot substitute for the declared entry types.
+            if type(e.index) is not int or e.index != i:
+                return False, f"index mismatch or invalid type at position {i}"
+            if type(e.timestamp) not in (int, float):
+                return False, f"invalid timestamp at index {i}"
+            try:
+                if not math.isfinite(e.timestamp):
+                    return False, f"nonfinite timestamp at index {i}"
+            except (OverflowError, TypeError, ValueError):
+                return False, f"invalid timestamp at index {i}"
+            if not isinstance(e.payload, dict):
+                return False, f"invalid payload at index {i}"
+            if type(e.prev_hash) is not str or re.fullmatch(r"[0-9a-f]{64}", e.prev_hash) is None:
+                return False, f"invalid predecessor digest at index {i}"
+            if type(e.hash) is not str or re.fullmatch(r"[0-9a-f]{64}", e.hash) is None:
+                return False, f"invalid stored digest at index {i}"
             if e.prev_hash != prev:
                 return False, f"broken link at index {i}: prev_hash does not match prior hash"
             try:
