@@ -66,8 +66,15 @@ with tempfile.TemporaryDirectory() as d:
     lines = open(path).read().splitlines()
     rec = json.loads(lines[2]); rec["payload"]["value"] = 7777   # tamper file directly
     lines[2] = json.dumps(rec); open(path, "w").write("\n".join(lines) + "\n")
-    c3 = Chronicle(path); ok, msg = c3.verify()
-    check(not ok, f"file-level tamper caught on reload ({msg})")
+    # Fail-closed construction is stronger than accepting a poisoned instance
+    # and relying on a later explicit verify() call.
+    try:
+        Chronicle(path)
+    except ValueError as exc:
+        check("content tampered at index 2" in str(exc),
+              f"file-level tamper refused at construction ({exc})")
+    else:
+        check(False, "file-level tamper must refuse at construction")
 
 print("[T10] Merkle root is deterministic and content-sensitive")
 def build(values, ts0=1000.0):
