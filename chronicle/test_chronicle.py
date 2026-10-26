@@ -107,3 +107,6 @@ print(f"\n================ RESULT ================")
 print(f"  PASSED: {P}   FAILED: {F}")
 print(f"=======================================")
 print("  VERDICT: TAMPER-EVIDENCE VERIFIED" if F == 0 else "  VERDICT: FAILURES — SEE ABOVE")
+
+# A failed adversarial assertion must fail the process and its CI job.
+raise SystemExit(1 if F else 0)
