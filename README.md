@@ -7,9 +7,9 @@ Nothing broader than the exercised test scope is claimed here.
 ## What's verified
 
 ### 1. Lucifer Latch — hardware safety veto (`hardware/lucifer_latch/`)
-An irreversible FPGA kill switch (Verilog, Artix-7 / Arty A7-35T target). Simulated
+A latched FPGA veto (Verilog, Artix-7 / Arty A7-35T target). Simulated
 with Icarus Verilog; **8/8 checks pass.** The property that matters — once tripped,
-**no software input clears it; only physical reset does** — is tested in RTL simulation by exercising max-threat and trigger toggling and confirming the simulated latch remains set. Timing floor
+**trigger/threat inputs do not clear it; the reset input does** — is tested in RTL simulation by exercising max-threat and trigger toggling and confirming the simulated latch remains set. Physical reset custody, power cycling and reconfiguration require separate assessment. Timing floor
 measured at 68001 cycles ≈ 680 µs @100 MHz, on spec.
 
 ### 2. Chronicle — tamper-evident ledger (`chronicle/`)
@@ -44,6 +44,14 @@ Honesty is the point of this repo, so the limits are stated up front:
 GitHub Actions success demonstrates that the configured workflow passed in GitHub's environment for that commit. It does not establish clean-room independent reproduction, silicon behavior, external witness anchoring, or production safety.
 
 ## Status
+
+2026-11-06 candidate: an [Arty A7-35T bench wrapper and operator procedure](hardware/lucifer_latch/arty_a7/README.md)
+now have local debounce/CDC-path simulation and xc7 technology-mapping evidence.
+A [candidate Chronicle checkpoint is externally included in Rekor](evidence/silicon/2026-11-06/).
+No board was programmed, no physical or routed-timing qualification was performed,
+and hardware E3.1 remains unearned. The external anchor is for the candidate artifact
+bundle, not an operational Chronicle deployment.
+
 | Artifact | Checks | Verified scope | Still needed |
 |----------|:------:|----------------|--------------|
 | Lucifer Latch | 8/8 | RTL behavior in sim | silicon: synth, debounce, metastability, UART TX |

@@ -1,5 +1,7 @@
 __pycache__/
 *.pyc
 sim_latch
+sim_board
+sim_debounce
 *.jsonl
 *.vcd
