@@ -10,9 +10,10 @@ module lucifer_arty_a7 #(
     output wire tripped_led,
     output wire ready_led
 );
-    wire reset_pressed;
+    wire reset_pressed, reset_initialized;
     sync_debounce #(.STABLE_CYCLES(RESET_STABLE_CYCLES)) reset_filter (
-        .clk(clk), .async_in(reset_button), .stable_out(reset_pressed)
+        .clk(clk), .async_in(reset_button), .stable_out(reset_pressed),
+        .initialized(reset_initialized)
     );
     (* ASYNC_REG = "TRUE", SHREG_EXTRACT = "NO" *) reg trigger_meta = 0;
     (* ASYNC_REG = "TRUE", SHREG_EXTRACT = "NO" *) reg trigger_sync = 0;
@@ -22,7 +23,7 @@ module lucifer_arty_a7 #(
         trigger_sync <= trigger_meta;
         power_on <= {power_on[30:0], 1'b1};
     end
-    wire core_reset_n = power_on[31] && !reset_pressed;
+    wire core_reset_n = power_on[31] && reset_initialized && !reset_pressed;
     wire latched, veto, status;
     lucifer_latch core (
         .clk(clk), .rst_n(core_reset_n), .trigger_in(trigger_sync),

@@ -1,0 +1,2 @@
+FATAL: /workspace/lucifer-physical-packet/hardware/lucifer_latch/arty_a7/tb_startup_reset.v:22: Permit before initial stable-level qualification at cycle 32
+       Time: 316000  Scope: tb_startup_reset

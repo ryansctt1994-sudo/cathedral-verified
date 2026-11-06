@@ -1,0 +1,76 @@
+{
+  "schema": "lucifer-startup-amendment/1",
+  "observed_at_utc": "2026-11-06T15:54:50.891267+00:00",
+  "original_source_commit": "49fc0fdd61b2c8f5487b0aeebe38b219bdf512f3",
+  "original_observation": "At cycle 32, run_permit asserted before initial reset-level qualification; separate held-reset diagnostic observed permit=1 at 1000 ns",
+  "original_regression_exit": 1,
+  "revised_regression_exit": 0,
+  "full_local_rtl_suites_exit": 0,
+  "xc7_mapping_exit": 0,
+  "changed_behavior": "Initial stable input must be qualified before permit can assert; startup held reset remains OFF; normal reset press/release remain qualified",
+  "source_files": [
+    {
+      "path": "hardware/lucifer_latch/lucifer_latch.v",
+      "sha256": "e699f02a156195fea19f28d71aecc21b480783c981f221913660735415037867"
+    },
+    {
+      "path": "hardware/lucifer_latch/arty_a7/sync_debounce.v",
+      "sha256": "68726d4a22e425940cbc693a0d5757c02d27a4bb17d520a2fa260efd686bd00f"
+    },
+    {
+      "path": "hardware/lucifer_latch/arty_a7/lucifer_arty_a7.v",
+      "sha256": "b141eeb3a4b8705e6d6f0b840da6702498ba9b5d9d3e7f4194cc95aec34e8e4b"
+    },
+    {
+      "path": "hardware/lucifer_latch/arty_a7/tb_startup_reset.v",
+      "sha256": "b387e852fc6ce3e697b91d20c75d6299a0e42cb2c79331d03d27cf9e79bf9de9"
+    }
+  ],
+  "raw_evidence": [
+    {
+      "path": "initial-diagnostic.v",
+      "sha256": "cedd848707c3d287cac3ca2e61e53551b8a17deec2ad1e0a467d0fce5e6c1e17"
+    },
+    {
+      "path": "original-regression.log",
+      "sha256": "5af4b56e0bd1d5999ef1a972729b80adea3154a5dae220681a2c9eb60762e899"
+    },
+    {
+      "path": "revised-netlist.v",
+      "sha256": "3fcead06ef26566d679801d9b91d3a2b0c3468ba3ca539cedb77c46545a1e886"
+    },
+    {
+      "path": "revised-rtl.log",
+      "sha256": "b4ccc22714676a32f07b0770a1daad4a20f5b858d4fa7e045a4ca5410b1c5026"
+    },
+    {
+      "path": "revised-synthesis.log",
+      "sha256": "d496fc76bb7a4ff40e506189e0c5df52b29162769b932a104a50c90966c08692"
+    },
+    {
+      "path": "startup-reset.log",
+      "sha256": "2030b64847521f5080f8bfbfe83ab3cc2bd9b5e3a5d9ca0cbadd7ea8144fb5bd"
+    }
+  ],
+  "tools": {
+    "iverilog": "12.0",
+    "yosys": "0.23 (7ce5011c24b)"
+  },
+  "reproduction": {
+    "rtl": "make test test-board",
+    "negative_control": "Compile the new tb_startup_reset.v with the original source commit; exit 1 at cycle 32",
+    "synthesis": "yosys -p \"read_verilog hardware/lucifer_latch/lucifer_latch.v hardware/lucifer_latch/arty_a7/sync_debounce.v hardware/lucifer_latch/arty_a7/lucifer_arty_a7.v; synth_xilinx -family xc7 -top lucifer_arty_a7; check -assert; stat\""
+  },
+  "author_principal": "ryansctt1994-sudo",
+  "independent_observation": false,
+  "physical_observation": false,
+  "new_rtl_public_append_only_anchor": "PENDING_ACTUAL_BUILD_CHECKPOINT",
+  "previous_anchor_remains_original_candidate_only": true,
+  "silicon_E3_1": "NOT_READY",
+  "board_programmed": false,
+  "physical_video": null,
+  "independent_timing_receipts": [],
+  "enrolled_outside_witnesses": [],
+  "outside_physical_reproductions": [],
+  "production_authority_earned": false
+}

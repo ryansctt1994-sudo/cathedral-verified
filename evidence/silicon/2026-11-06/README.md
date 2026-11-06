@@ -34,3 +34,12 @@ physical debounce/metastability/irreversibility result was measured, and no outs
 operator has reproduced this package. The author/machine/principal are the same
 for all local checks. An Arty SRAM configuration can clear on power loss or JTAG
 reconfiguration; only a bounded software-input irreversibility claim is exercised.
+# Later startup amendment and physical packet
+
+The original files below remain historical candidate evidence. The later
+[`startup-amendment`](startup-amendment/) preserves a newly exposed startup-reset
+failure, revised RTL regression/mapping results, and the exact changed-source
+hashes. The earlier Rekor entry does not cover that revised RTL. The
+[physical reproduction packet](../../../hardware/lucifer_latch/arty_a7/qualification/README.md)
+requires new actual-build anchoring, physical traces/video, independent timing
+receipts and outside reproduction. Those observations remain missing.

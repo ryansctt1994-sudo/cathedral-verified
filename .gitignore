@@ -3,5 +3,6 @@ __pycache__/
 sim_latch
 sim_board
 sim_debounce
+sim_startup
 *.jsonl
 *.vcd

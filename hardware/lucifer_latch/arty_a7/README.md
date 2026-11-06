@@ -1,5 +1,19 @@
 # Arty A7-35T bench interlock candidate
 
+**2026-11-06 follow-up:** the [physical reproduction packet](qualification/README.md)
+defines continuous video, raw timing traces, independently signed observations and
+a proposed public 2-of-3 outside-witness policy. No outside witness is enrolled.
+It also documents [SRAM and permanent-irreversibility limits](qualification/SRAM_AND_PERMANENCE.md).
+E3.1 remains **NOT_READY**.
+
+The earlier wrapper permitted before initial reset qualification, including reset
+held at boot. A retained failing simulation and new regression exposed that gap.
+The revised debounce block explicitly qualifies the initial pin level before
+`run_permit` can assert. Both held/released/bouncing startup and normal reset
+press/release use the full 500000-cycle qualification. Later reset assertion still
+has its qualification delay. This revision needs new physical measurements and
+a new actual-build anchor; the historical Rekor entry below binds the earlier RTL.
+
 Status on 2026-11-06: local RTL simulation and Xilinx 7-series technology mapping
 completed. **No Arty was connected, no Vivado implementation was run, no bitstream
 was produced or programmed, and no physical irreversibility/debounce/metastability
@@ -21,6 +35,8 @@ metastability or establish a measured MTBF; placement, recovery/removal, CDC rev
 and device-specific metastability assumptions remain necessary.
 
 During power-on initialization and qualified reset, `run_permit` stays low.
+Initialization now includes initial stable reset-level qualification, not just
+the 32-cycle power-on register.
 An external load-enable circuit must default OFF when the FPGA is absent, unpowered,
 or configuring, using an independent pull-down and suitable external driver.
 Do not attach a real actuator for this bench. Use a harmless canary/load-enable
@@ -130,7 +146,7 @@ Do not create an independent identity by generating another local key or agent.
 
 ## External Chronicle anchor
 
-The candidate's Chronicle checkpoint digest is
+The **earlier candidate's** Chronicle checkpoint digest is
 `cfbc72137d476a7c89817ba5e12f0104aa3e3b5be35079f8be295743a83fbd78`.
 It is publicly included in Rekor at index **3719860200**:
 [entry and signed proof](https://rekor.sigstore.dev/api/v1/log/entries/108e9186e8c5677a94273e14be960ad44a21d0a146c2013b824b6e4209bcd8a87d1f7c08e56c03d3).
