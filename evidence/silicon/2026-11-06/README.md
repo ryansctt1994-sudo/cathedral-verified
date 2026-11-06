@@ -43,3 +43,14 @@ hashes. The earlier Rekor entry does not cover that revised RTL. The
 [physical reproduction packet](../../../hardware/lucifer_latch/arty_a7/qualification/README.md)
 requires new actual-build anchoring, physical traces/video, independent timing
 receipts and outside reproduction. Those observations remain missing.
+
+## Revised source anchor — 2026-11-06T16:13:28Z
+
+The [revised-source receipt](revised-anchor/README.md) completes publication of the
+exact RTL/packet at hardware commit `0f3b0973b95ecbadb49ca4f7d989ed1da8a2f6b9`.
+Rekor index **3721019269** binds checkpoint
+`b0439f7d0878dd8d888bd7fde2dc37baca645829d10e999609c79b38a3018332`.
+Both public proofs, readback, all source hashes and original Chronicle prefix were
+verified. Earlier receipts and packet bytes are preserved unchanged. This is source
+publication only; a vendor build and physical results require future checkpoints.
+No silicon qualification, outsider reproduction, timing receipt or quorum is earned.
