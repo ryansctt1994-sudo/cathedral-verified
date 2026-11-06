@@ -1,0 +1,2 @@
+time_ns=1000000 raw_reset=1 permit=1 qualified_reset=0
+OBSERVED_FAILURE: startup with held physical reset permits before debounce qualification

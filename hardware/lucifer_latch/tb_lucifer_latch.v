@@ -85,10 +85,10 @@ module tb_lucifer_latch;
         $display("  PASSED: %0d   FAILED: %0d", pass, fail);
         $display("=======================================");
         if (fail==0) $display("  VERDICT: SAFETY-CRITICAL BEHAVIOR VERIFIED");
-        else         $display("  VERDICT: DESIGN HAS FAILURES — SEE ABOVE");
+        else         $fatal(1, "VERDICT: DESIGN HAS FAILURES — SEE ABOVE");
         $finish;
     end
 
     // global watchdog
-    initial begin #2000000; $display("WATCHDOG TIMEOUT"); $finish; end
+    initial begin #2000000; $fatal(1, "WATCHDOG TIMEOUT"); end
 endmodule

@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   chronicle:
     runs-on: ubuntu-latest
@@ -11,3 +14,36 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run Chronicle verification suite
         run: cd chronicle && python3 test_chronicle.py
+  rtl-and-external-anchor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install local simulation and synthesis tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog yosys
+          python -m pip install cryptography==50.0.0
+      - name: RTL and default debounce simulations
+        run: |
+          set -o pipefail
+          mkdir -p local-evidence
+          make test-hw test-board 2>&1 | tee local-evidence/rtl.log
+      - name: xc7 technology mapping (no placement or physical qualification)
+        run: |
+          yosys -l local-evidence/yosys.log -p 'read_verilog hardware/lucifer_latch/lucifer_latch.v hardware/lucifer_latch/arty_a7/sync_debounce.v hardware/lucifer_latch/arty_a7/lucifer_arty_a7.v; synth_xilinx -family xc7 -top lucifer_arty_a7; check -assert; stat'
+      - name: Verify actual public-log proof offline
+        run: |
+          cd evidence/silicon/2026-11-06
+          sha256sum -c candidate-bundle.sha256
+          cd ../../..
+          python -m chronicle.external_anchor evidence/silicon/2026-11-06/checkpoint.json evidence/silicon/2026-11-06/rekor-entry.json evidence/silicon/2026-11-06/rekor-public-key.pem
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: local-rtl-and-mapping-evidence
+          path: local-evidence/
+          if-no-files-found: error
