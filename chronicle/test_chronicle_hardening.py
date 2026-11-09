@@ -194,5 +194,36 @@ class ChronicleHardeningTests(unittest.TestCase):
         self.assertTrue(verify_against_anchor(c, make_anchor(c))[0])
 
 
+    def test_refuse_to_anchor_mutated_unverified_memory(self):
+        c = Chronicle()
+        c.append({"event": "veto", "result": False}, timestamp=1)
+        c.entries[0].payload["result"] = True
+        self.assertFalse(c.verify()[0])
+        with self.assertRaisesRegex(ValueError, "invalid Chronicle"):
+            make_anchor(c)
+
+    def test_local_rewrite_plus_local_anchor_is_not_authentication(self):
+        # A locally minted anchor has no independent custody. If the attacker
+        # can replace the chain and the anchor, a forged pair still verifies.
+        trusted = Chronicle()
+        trusted.append({"decision": "VETO"}, timestamp=1)
+        external_reference = make_anchor(trusted)
+
+        attacker = Chronicle()
+        attacker.append({"decision": "ALLOW"}, timestamp=1)
+        forged_anchor = make_anchor(attacker)
+        self.assertNotEqual(external_reference, forged_anchor)
+        self.assertTrue(attacker.verify()[0])
+        self.assertFalse(verify_against_anchor(attacker, external_reference)[0])
+        self.assertTrue(verify_against_anchor(attacker, forged_anchor)[0])
+
+    def test_valid_anchor_still_matches_unmodified_chain_after_guard(self):
+        c = Chronicle()
+        for i in range(4):
+            c.append({"event": i}, timestamp=i + 1)
+        anchored = make_anchor(c)
+        self.assertTrue(verify_against_anchor(c, anchored)[0])
+
+
 if __name__ == '__main__':
     unittest.main()

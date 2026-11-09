@@ -181,8 +181,14 @@ class Chronicle:
 
 # --- Head anchoring: closes the truncation/rewrite gap when anchor is trusted ---
 def make_anchor(chron: "Chronicle") -> dict:
-    """Snapshot the chain head. Publish this to an EXTERNAL append-only store
-    (or have witnesses co-sign it). Truncation/rewrite then becomes detectable."""
+    """Snapshot a verified chain. The resulting dictionary is NOT authenticated.
+
+    Publish the exact bytes to an independently controlled append-only store or
+    qualified witness before relying on it against rewrite/truncation.
+    """
+    ok, reason = chron.verify()
+    if not ok:
+        raise ValueError(f"cannot anchor invalid Chronicle: {reason}")
     return {"count": len(chron.entries), "head": chron.head(),
             "merkle_root": chron.merkle_root()}
 

@@ -21,6 +21,20 @@ python3 test_chronicle.py
 python3 -m unittest -v test_chronicle_hardening
 ```
 
+## Additional anchor-minting safety gate (stacked review only)
+
+The `make_anchor` helper now refuses to produce an anchor for a Chronicle
+whose in-memory entries fail self-verification. Regression tests exercise a
+mutated ledger, a healthy ledger, and an adverse control where an attacker
+rewrites both the chain and the locally stored anchor. In that last case the
+forged pair still passes self-consistency checks. **This is expected and does
+not demonstrate independent authentication.** The authentic reference must be
+held outside the attacker's control to discriminate the rewrite.
+
+These tests are source/CI observations, not an outside witness, silicon result,
+or evidence-stage promotion. This branch depends on draft PR #12 and its
+underlying reconciliation PR #11.
+
 ## Known limitations — these are release blockers
 
 - The file is **not crash-atomic**: a failed or interrupted write can leave an incomplete JSONL line. No recovery journal or automatic rollback is provided.
