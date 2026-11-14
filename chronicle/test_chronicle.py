@@ -107,3 +107,6 @@ print(f"\n================ RESULT ================")
 print(f"  PASSED: {P}   FAILED: {F}")
 print(f"=======================================")
 print("  VERDICT: TAMPER-EVIDENCE VERIFIED" if F == 0 else "  VERDICT: FAILURES — SEE ABOVE")
+
+# Assertion failures must propagate to make and external operators.
+raise SystemExit(1 if F else 0)

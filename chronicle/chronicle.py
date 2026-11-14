@@ -17,6 +17,8 @@ gives you the detection primitive they all build on.
 """
 from __future__ import annotations
 import hashlib, json, os, time
+import fcntl
+import threading
 from dataclasses import dataclass, asdict
 from typing import Any
 
@@ -43,31 +45,60 @@ class Entry:
 
 class Chronicle:
     def __init__(self, path: str | None = None):
+        self._lock = threading.RLock()
         self.path = path
         self.entries: list[Entry] = []
         if path and os.path.exists(path):
             self._load()
 
     def append(self, payload: dict, timestamp: float | None = None) -> Entry:
+        """Serialize cooperating Linux writers across reload, verify and fsync.
+
+        Locks do not protect against hostile writers, file replacement, network
+        filesystems, or external rollback. Readers hold a snapshot until reload.
+        A damaged tail is refused; this method never silently repairs it.
+        """
+        with self._lock:
+            if self.path:
+                with open(self.path, "a+", encoding="utf-8") as stream:
+                    fcntl.flock(stream, fcntl.LOCK_EX)
+                    self._read(stream)
+                    ok, message = self.verify()
+                    if not ok:
+                        raise ValueError(message)
+                    entry = self._entry(payload, timestamp)
+                    encoded = json.dumps(entry.to_dict(), allow_nan=False) + "\n"
+                    stream.write(encoded)
+                    stream.flush()
+                    os.fsync(stream.fileno())
+                    self.entries.append(entry)
+                    return entry
+            entry = self._entry(payload, timestamp)
+            self.entries.append(entry)
+            return entry
+
+    def _entry(self, payload, timestamp):
+        # Snapshot caller-owned data; later mutation must not change the entry.
+        payload = json.loads(json.dumps(payload, allow_nan=False))
         ts = time.time() if timestamp is None else timestamp
         idx = len(self.entries)
         prev = self.entries[-1].hash if self.entries else GENESIS_PREV
-        h = compute_hash(idx, ts, payload, prev)
-        e = Entry(idx, ts, payload, prev, h)
-        self.entries.append(e)
-        if self.path:
-            with open(self.path, "a") as f:
-                f.write(json.dumps(e.to_dict()) + "\n")
-                f.flush(); os.fsync(f.fileno())   # durability: survive crash
-        return e
+        return Entry(idx, ts, payload, prev, compute_hash(idx, ts, payload, prev))
+
+    def _read(self, stream):
+        stream.seek(0)
+        entries = []
+        for line in stream:
+            if not line.endswith("\n") or not line.strip():
+                raise ValueError("incomplete or empty Chronicle record; manual recovery required")
+            entries.append(Entry(**json.loads(line)))
+        self.entries = entries
+        stream.seek(0, os.SEEK_END)
 
     def _load(self):
-        with open(self.path) as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    d = json.loads(line)
-                    self.entries.append(Entry(**d))
+        with open(self.path, encoding="utf-8") as stream:
+            fcntl.flock(stream, fcntl.LOCK_SH)
+            self._read(stream)
 
     def verify(self) -> tuple[bool, str]:
         """Walk the chain. Returns (ok, message). Detects ANY tampering."""
