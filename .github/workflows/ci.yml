@@ -5,9 +5,19 @@ on:
   pull_request:
 
 jobs:
-  chronicle:
+  bounded-primitives:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run Chronicle verification suite
-        run: cd chronicle && python3 test_chronicle.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install local test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+          python -m pip install pytest==9.2.0 hypothesis==6.170.15
+      - name: Run Chronicle and RTL suites
+        run: make test
+      - name: Run process and property tests
+        run: cd chronicle && python -m pytest -q test_concurrency.py

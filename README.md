@@ -1,5 +1,8 @@
 # cathedral-verified
 
+> **Candidate engineering changes:** Chronicle now serializes cooperating local Linux writers with file locks and refuses damaged tails. Process and generated-property tests are in `chronicle/test_concurrency.py` (`python -m pip install pytest hypothesis`, then `cd chronicle && python -m pytest -q test_concurrency.py`). This adds no external anchor or witness. The [board acceptance procedure](hardware/lucifer_latch/BOARD_ACCEPTANCE.md) remains unexecuted.
+
+
 Two bounded safety primitives with repository-local tests. The repository is designed for reproducibility, but a green local or GitHub CI run is **not** the same as independent reproduction or production certification.
 
 Nothing broader than the exercised test scope is claimed here.
@@ -24,8 +27,8 @@ make test          # runs both suites
 make test-chronicle
 make test-hw        # requires: iverilog
 ```
-The GitHub Actions workflow currently runs the Chronicle verification suite on every push.
-Run `make test` locally for the full Chronicle + Lucifer Latch check until hardware-simulation CI is expanded.
+The candidate GitHub Actions workflow runs Chronicle, RTL simulation, and process/property checks.
+A local run or hosted CI pass remains origin-controlled evidence only.
 
 ## What is NOT claimed (read this)
 Honesty is the point of this repo, so the limits are stated up front:
